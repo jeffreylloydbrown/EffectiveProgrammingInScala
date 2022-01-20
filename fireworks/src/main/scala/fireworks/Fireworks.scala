@@ -34,7 +34,12 @@ object Firework:
    * “literal patterns” to match on case objects.
    */
   def next(firework: Firework): Firework =
-    ???
+    firework match {
+      case current: Waiting => current.next
+      case current: Launched => current.next
+      case current: Exploding => current.next
+      case Done => Done
+    }
 
 end Firework
 
