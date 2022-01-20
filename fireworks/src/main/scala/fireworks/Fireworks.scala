@@ -155,7 +155,7 @@ case class Exploding(countDown: Int, particles: Particles) extends Firework:
    */
   def next: Firework =
     if countDown > 0 then
-      ??? //copy(countDown = countDown - 1)
+      copy(countDown = countDown - 1, particles = particles.next)
     else Done
 
 end Exploding
