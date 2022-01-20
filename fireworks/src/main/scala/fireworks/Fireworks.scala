@@ -66,7 +66,7 @@ case class Waiting(countDown: Int, startPosition: Point, numberOfParticles: Int,
   def next: Firework =
     if countDown > 0 then
       copy(countDown = countDown - 1)
-    else ???
+    else Launched.init(startPosition, numberOfParticles, particlesColor)
 
 end Waiting
 
