@@ -115,7 +115,7 @@ case class Launched(countDown: Int, position: Point, direction: Angle, numberOfP
    */
   def next: Firework =
     if countDown > 0 then
-      ??? //copy(countDown = countDown - 1)
+      copy(countDown = countDown - 1, position = Motion.movePoint(position, direction, Settings.propulsionSpeed))
     else Exploding.init(numberOfParticles, direction, position, particlesColor)
 
 end Launched
