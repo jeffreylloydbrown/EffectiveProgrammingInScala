@@ -55,7 +55,7 @@ object InMemoryModel extends Model:
     Tasks(idStore)
 
   def tags: Tags =
-    Tags(List.empty)
+    Tags(idStore.values.flatMap(_.tags).toList.distinct)
 
   def tasks(tag: Tag): Tasks =
     Tasks(idStore)
