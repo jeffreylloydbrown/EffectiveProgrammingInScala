@@ -49,8 +49,7 @@ object InMemoryModel extends Model:
     idStore.updateWith(id)(opt => opt.map(f))
 
   def delete(id: Id): Boolean =
-    var found = false
-    found
+    idStore.remove(id).nonEmpty
 
   def tasks: Tasks =
     Tasks(idStore)
