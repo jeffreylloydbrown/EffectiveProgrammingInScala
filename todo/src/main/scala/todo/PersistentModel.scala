@@ -52,7 +52,7 @@ object PersistentModel extends Model:
    * It is not necessary to use this method. You should be able to use loadTasks
    * and loadId instead, which have a simpler interface.
    */
-  def load[A](path: Path)(using decoder: Decoder[A]): A = {
+  private def load[A](path: Path)(using decoder: Decoder[A]): A = {
     val str = Files.readString(path, StandardCharsets.UTF_8)
 
     // In a production system we would want to pay more attention to error
@@ -84,7 +84,7 @@ object PersistentModel extends Model:
    * It is not necessary to use this method. You should be able to use saveTasks
    * and saveId instead, which have a simpler interface.
    */
-  def save[A](path: Path, data: A)(using encoder: Encoder[A]): Unit =
+  private def save[A](path: Path, data: A)(using encoder: Encoder[A]): Unit =
     val json = data.asJson
     Files.writeString(path, json.spaces2, StandardCharsets.UTF_8)
     ()
@@ -95,11 +95,22 @@ object PersistentModel extends Model:
    * (The InMemoryModel uses the same.)
    */
 
+  // I'm choosing to NOT create an in-memory current ID value.  In a real system I'd
+  // never choose this for performance reasons, but for this homework we aren't worried
+  // about performance.  The data will always be read from the files, updated, and written
+  // back.  This also has the benefit of protecting against system crashes, we would only lose
+  // the most recent change.
+
   def create(task: Task): Id =
-    ???
+    val tasks = loadTasks().toList
+    val id = loadId()
+    saveTasks(Tasks(tasks :+ (id -> task)))
+    val nextId = id.next
+    saveId(nextId)  // id file records the NEXT id to use, not the one we just instantiated.
+    id
 
   def read(id: Id): Option[Task] =
-    ???
+    loadTasks().toMap.get(id)
 
   def update(id: Id)(f: Task => Task): Option[Task] =
     ???
