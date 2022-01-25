@@ -119,10 +119,10 @@ object PersistentModel extends Model:
     ???
 
   def tasks: Tasks =
-    ???
+    loadTasks()
 
   def tasks(tag: Tag): Tasks =
-    ???
+    Tasks(loadTasks().toList.filter{ case (_, v) => v.tags.contains(tag) })
 
   def complete(id: Id): Option[Task] =
     ???
