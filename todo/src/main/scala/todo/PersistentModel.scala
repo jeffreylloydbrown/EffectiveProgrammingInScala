@@ -1,13 +1,14 @@
 package todo
 
 import cats.implicits.*
-import java.nio.file.{Path, Paths, Files}
-import java.nio.charset.StandardCharsets
-import io.circe.{Decoder, Encoder}
 import io.circe.parser.*
 import io.circe.syntax.*
-import scala.collection.mutable
+import io.circe.{Decoder, Encoder}
 import todo.data.*
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
+import scala.collection.mutable
 
 /**
  * The PersistentModel is a model that saves all data to files, meaning that
@@ -19,9 +20,9 @@ object PersistentModel extends Model:
   import Codecs.given
 
   /** Path where the tasks are saved */
-  val tasksPath = Paths.get("tasks.json")
+  private val tasksPath = Paths.get("tasks.json")
   /** Path where the next id is saved */
-  val idPath = Paths.get("id.json")
+  private val idPath = Paths.get("id.json")
 
   /**
    * Load Tasks from a file. Return an empty task list if the file does not exist,
@@ -52,7 +53,7 @@ object PersistentModel extends Model:
    * It is not necessary to use this method. You should be able to use loadTasks
    * and loadId instead, which have a simpler interface.
    */
-  def load[A](path: Path)(using decoder: Decoder[A]): A = {
+  private def load[A](path: Path)(using decoder: Decoder[A]): A = {
     val str = Files.readString(path, StandardCharsets.UTF_8)
 
     // In a production system we would want to pay more attention to error
@@ -84,7 +85,7 @@ object PersistentModel extends Model:
    * It is not necessary to use this method. You should be able to use saveTasks
    * and saveId instead, which have a simpler interface.
    */
-  def save[A](path: Path, data: A)(using encoder: Encoder[A]): Unit =
+  private def save[A](path: Path, data: A)(using encoder: Encoder[A]): Unit =
     val json = data.asJson
     Files.writeString(path, json.spaces2, StandardCharsets.UTF_8)
     ()
@@ -95,29 +96,46 @@ object PersistentModel extends Model:
    * (The InMemoryModel uses the same.)
    */
 
+  // I'm choosing to NOT create an in-memory current ID value.  In a real system I'd
+  // never choose this for performance reasons, but for this homework we aren't worried
+  // about performance.  The data will always be read from the files, updated, and written
+  // back.  This also has the benefit of protecting against system crashes, we would only lose
+  // the most recent change.
+
   def create(task: Task): Id =
-    ???
+    val tasks = loadTasks().toList
+    val id = loadId()
+    saveTasks(Tasks(tasks :+ (id -> task)))
+    val nextId = id.next
+    saveId(nextId)  // id file records the NEXT id to use, not the one we just instantiated.
+    id
 
   def read(id: Id): Option[Task] =
-    ???
+    loadTasks().toMap.get(id)
 
   def update(id: Id)(f: Task => Task): Option[Task] =
-    ???
+    val updatedTasks = loadTasks().toMap.updatedWith(id)(opt => opt.map(f))
+    saveTasks(Tasks(updatedTasks))
+    updatedTasks.get(id)
 
   def delete(id: Id): Boolean =
-    ???
+    val tasks = loadTasks().toMap
+    val found = tasks.contains(id)
+    saveTasks(Tasks(tasks - id))
+    found
 
   def tasks: Tasks =
-    ???
+    loadTasks()
 
   def tasks(tag: Tag): Tasks =
-    ???
+    Tasks(loadTasks().toList.filter{ case (_, v) => v.tags.contains(tag) })
 
   def complete(id: Id): Option[Task] =
-    ???
+    update(id)(_.complete)
 
   def tags: Tags =
-    ???
+    Tags(loadTasks().tasks.flatMap(_._2.tags).toList.distinct)
 
   def clear(): Unit =
-    ???
+    saveTasks(Tasks.empty)
+    saveId(Id(0))

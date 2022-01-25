@@ -3,6 +3,7 @@ package data
 
 import io.circe.*
 import io.circe.syntax.*
+
 import java.time.ZonedDateTime
 
 /*
@@ -36,7 +37,7 @@ object Codecs:
         case err =>
           Left(
             DecodingFailure(
-              s"The task type ${err} is not one of the expected types of 'active' or 'completed'",
+              s"The task type $err is not one of the expected types of 'active' or 'completed'",
               List.empty
             )
           )
@@ -88,12 +89,12 @@ object Codecs:
 
 
   given tasksCodec: Codec[Tasks] with
-    val elementDecoder = new Decoder[(Id, Task)]:
+    private val elementDecoder = new Decoder[(Id, Task)]:
       def apply(c: HCursor): Decoder.Result[(Id, Task)] =
         for {
           id <- c.downField("id").as[Int]
           task <- c.downField("task").as[Task]
-        } yield (Id(id) -> task)
+        } yield Id(id) -> task
 
     def apply(c: HCursor): Decoder.Result[Tasks] =
       c.as(Decoder.decodeList(elementDecoder)).map(t => Tasks(t))
