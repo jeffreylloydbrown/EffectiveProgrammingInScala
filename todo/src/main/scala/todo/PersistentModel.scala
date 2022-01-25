@@ -113,7 +113,9 @@ object PersistentModel extends Model:
     loadTasks().toMap.get(id)
 
   def update(id: Id)(f: Task => Task): Option[Task] =
-    ???
+    val updatedTasks = loadTasks().toMap.updatedWith(id)(opt => opt.map(f))
+    saveTasks(Tasks(updatedTasks))
+    updatedTasks.get(id)
 
   def delete(id: Id): Boolean =
     ???
@@ -125,10 +127,10 @@ object PersistentModel extends Model:
     Tasks(loadTasks().toList.filter{ case (_, v) => v.tags.contains(tag) })
 
   def complete(id: Id): Option[Task] =
-    ???
+    update(id)(_.complete)
 
   def tags: Tags =
-    ???
+    Tags(loadTasks().tasks.flatMap(_._2.tags).toList.distinct)
 
   def clear(): Unit =
     saveTasks(Tasks.empty)
