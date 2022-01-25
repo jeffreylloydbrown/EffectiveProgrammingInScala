@@ -1,13 +1,14 @@
 package todo
 
 import cats.implicits.*
-import java.nio.file.{Path, Paths, Files}
-import java.nio.charset.StandardCharsets
-import io.circe.{Decoder, Encoder}
 import io.circe.parser.*
 import io.circe.syntax.*
-import scala.collection.mutable
+import io.circe.{Decoder, Encoder}
 import todo.data.*
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
+import scala.collection.mutable
 
 /**
  * The PersistentModel is a model that saves all data to files, meaning that
@@ -118,7 +119,10 @@ object PersistentModel extends Model:
     updatedTasks.get(id)
 
   def delete(id: Id): Boolean =
-    ???
+    val tasks = loadTasks().toMap
+    val found = tasks.contains(id)
+    saveTasks(Tasks(tasks - id))
+    found
 
   def tasks: Tasks =
     loadTasks()
