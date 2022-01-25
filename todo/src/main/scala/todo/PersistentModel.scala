@@ -19,9 +19,9 @@ object PersistentModel extends Model:
   import Codecs.given
 
   /** Path where the tasks are saved */
-  val tasksPath = Paths.get("tasks.json")
+  private val tasksPath = Paths.get("tasks.json")
   /** Path where the next id is saved */
-  val idPath = Paths.get("id.json")
+  private val idPath = Paths.get("id.json")
 
   /**
    * Load Tasks from a file. Return an empty task list if the file does not exist,
@@ -120,4 +120,5 @@ object PersistentModel extends Model:
     ???
 
   def clear(): Unit =
-    ???
+    saveTasks(Tasks.empty)
+    saveId(Id(0))
