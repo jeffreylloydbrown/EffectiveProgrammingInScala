@@ -1,11 +1,11 @@
 package todo
 
 import cats.effect.IO
+import io.circe.Encoder
+import io.circe.syntax.*
 import org.http4s.HttpRoutes
 import org.http4s.circe.*
 import org.http4s.circe.CirceEntityDecoder.*
-import io.circe.Encoder
-import io.circe.syntax.*
 import todo.data.*
 
 /**
@@ -15,9 +15,9 @@ import todo.data.*
  * You should NOT modify this file.
  */
 class TodoService(model: Model):
-  import org.http4s.dsl.io.*
-  import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
   import Codecs.given
+  import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
+  import org.http4s.dsl.io.*
 
   object Description extends QueryParamDecoderMatcher[String]("description")
 

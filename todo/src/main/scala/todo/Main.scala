@@ -5,9 +5,9 @@ import cats.implicits.*
 import fs2.Stream
 import org.http4s.*
 import org.http4s.ember.server.EmberServerBuilder
+import org.http4s.server.middleware.CORS
 import org.http4s.server.{Router, Server}
 import org.http4s.syntax.kleisli.*
-import org.http4s.server.middleware.CORS
 
 /**
  * This object setups and runs the webserver.
