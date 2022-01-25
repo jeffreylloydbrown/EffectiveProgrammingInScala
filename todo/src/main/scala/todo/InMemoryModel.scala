@@ -14,14 +14,16 @@ object InMemoryModel extends Model:
   /* These are the tasks the application starts with. You can change these if you want. */
   val defaultTasks = List(
     Id(0) -> Task(State.completedNow, "Complete Effective Scala Week 2", None, List(Tag("programming"), Tag("scala"))),
-    Id(1) -> Task(State.Active, "Complete Effective Scala Week 3", Some("Finish the todo list exercise"), List(Tag("programming"), Tag("scala"), Tag("encapsulation"), Tag("sbt"))),
-    Id(2) -> Task(State.Active, "Make a sandwich", Some("Cheese and salad or ham and tomato?"), List(Tag("food"), Tag("lunch")))
+    Id(1) -> Task(State.Active, "Complete Effective Scala Week 3", Some("Finish the todo list exercise"),
+      List(Tag("programming"), Tag("scala"), Tag("encapsulation"), Tag("sbt"))),
+    Id(2) -> Task(State.Active, "Make a sandwich", Some("Cheese and salad or ham and tomato?"),
+      List(Tag("food"), Tag("lunch")))
   )
 
   /* Every Task is associated with an Id. Ids must be unique. */
   private val idGenerator = IdGenerator(Id(3))
 
-  /* The idStore stores the associated between Ids and Tasks. We use a
+  /* The idStore stores the association between Ids and Tasks. We use a
    * LinkedHashMap so we can access elements in insertion order. We need to keep
    * a stable order so the UI doesn't jump around, which would be confusing to
    * the user.
@@ -34,6 +36,7 @@ object InMemoryModel extends Model:
 
   def create(task: Task): Id =
     val id = idGenerator.nextId()
+    idStore += (id -> task)
     id
 
   def read(id: Id): Option[Task] =
