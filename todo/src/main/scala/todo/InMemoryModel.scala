@@ -1,8 +1,9 @@
 package todo
 
 import cats.implicits.*
-import scala.collection.mutable
 import todo.data.*
+
+import scala.collection.mutable
 
 /**
  * The InMemoryModel is a Model that stores all the tasks in RAM, and hence they
