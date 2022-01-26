@@ -1,7 +1,7 @@
 package todo
 
-import todo.data.*
 import munit.FunSuite
+import todo.data.*
 
 /**
  * This suite aggregates the tests for the InMemoryModel and the
@@ -11,13 +11,13 @@ class TodoSuite extends FunSuite:
 
   // Data we use for testing
 
-  val task1 = Task(State.Active, "An active task", Some("The notes"), List(Tag("a"), Tag("b")))
-  val task2 = Task(State.completedNow, "An inactive task", None, List(Tag("c")))
-  val task3 = Task(State.Active, "Another active task", None, List(Tag("a"), Tag("c")))
+  private val task1 = Task(State.Active, "An active task", Some("The notes"), List(Tag("a"), Tag("b")))
+  private val task2 = Task(State.completedNow, "An inactive task", None, List(Tag("c")))
+  private val task3 = Task(State.Active, "Another active task", None, List(Tag("a"), Tag("c")))
 
   // Fixtures handle setting up and cleaning up state
 
-  def makeModelFixture(name: String, model: Model) = FunFixture[(String, Model)](
+  private def makeModelFixture(name: String, model: Model) = FunFixture[(String, Model)](
     setup = { test =>
       model.clear()
       (name, model)
@@ -25,16 +25,16 @@ class TodoSuite extends FunSuite:
     teardown = { case (_, model) => model.clear() }
   )
 
-  val inMemoryFixture = makeModelFixture("InMemoryModel", InMemoryModel)
-  val persistentFixture = makeModelFixture("PersistentModel", PersistentModel)
+  private val inMemoryFixture = makeModelFixture("InMemoryModel", InMemoryModel)
+  private val persistentFixture = makeModelFixture("PersistentModel", PersistentModel)
 
   // Custom assertions. These make our code more readable and give more useful messages on errors
 
   def assertTask(
-    modelName: String,
-    actual: Option[Task],
-    expected: Task
-  )(using loc: munit.Location): Unit =
+                  modelName: String,
+                  actual: Option[Task],
+                  expected: Task
+                )(using loc: munit.Location): Unit =
     actual match
       case None =>
         fail(s"Using $modelName: We expected the task $expected but we received None instead.")
@@ -42,9 +42,9 @@ class TodoSuite extends FunSuite:
         assertEquals(task, expected, s"Using $modelName: We expected the task $expected but we received $task instead.")
 
   def assertTaskActive(
-    modelName: String,
-    task: Option[Task]
-  )(using loc: munit.Location): Unit =
+                        modelName: String,
+                        task: Option[Task]
+                      )(using loc: munit.Location): Unit =
     task match
       case None =>
         fail(s"Using $modelName: We expected a task but we received None instead.")
@@ -52,9 +52,9 @@ class TodoSuite extends FunSuite:
         assert(t.state.active, s"Using $modelName: We expected the task's state to be active but it was ${t.state}")
 
   def assertTaskCompleted(
-    modelName: String,
-    task: Option[Task]
-  )(using loc: munit.Location): Unit =
+                           modelName: String,
+                           task: Option[Task]
+                         )(using loc: munit.Location): Unit =
     task match
       case None =>
         fail(s"Using $modelName: We expected a task but we received None instead.")
@@ -88,11 +88,11 @@ class TodoSuite extends FunSuite:
       assert(model.delete(id1), s"Using $name: We expected deleting $id1 to return true")
 
       assertEquals(model.read(id1),
-                   None,
-                   s"Using $name: The deleted task was still returned when read")
+        None,
+        s"Using $name: The deleted task was still returned when read")
       assertEquals(model.read(id2),
-                   Some(task2),
-                   s"Using $name: The task that was not deleted was not returned when read")
+        Some(task2),
+        s"Using $name: The task that was not deleted was not returned when read")
     }
 
     fixture.test("Tasks returns all inserted tasks in insertion order"){ case (name, model) =>
@@ -100,15 +100,15 @@ class TodoSuite extends FunSuite:
       val t1 = model.tasks
 
       assertEquals(t1.toList,
-                   List((id1 -> task1)),
-                   s"Using $name: The list of tasks is different to the tasks that were created")
+        List(id1 -> task1),
+        s"Using $name: The list of tasks is different to the tasks that were created")
 
       val id2 = model.create(task2)
       val t2 = model.tasks
 
       assertEquals(t2.toList,
-                   List((id1 -> task1), (id2 -> task2)),
-                   s"Using $name: The list of tasks is different to the tasks that were created, or it is not in order of creation")
+        List(id1 -> task1, id2 -> task2),
+        s"Using $name: The list of tasks is different to the tasks that were created, or it is not in order of creation")
     }
 
     fixture.test("Tasks(tag) returns only tasks with given tag"){ case (name, model) =>
