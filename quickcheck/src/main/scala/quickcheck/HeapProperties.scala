@@ -51,15 +51,15 @@ trait HeapProperties(val heapInterface: HeapInterface):
         true
       else
         // find the minimal element
-        val x1: Int = ???
+        val x1: Int = findMin(heap)
         // delete the minimal element of `heap`
-        val heap2: List[Node] = ???
+        val heap2: List[Node] = deleteMin(heap)
         // find the minimal element in `heap2`
-        val x2: Int = ???
+        val x2: Int = findMin(heap2)
         // check that the deleted element is less than or equal to the
         // minimal element of the remaining heap, and that the remaining
         // heap verifies the same property (by recursively calling `check`)
-        val checked: Boolean = ???
+        val checked: Boolean = x1 <= x2 && check(heap2)
         checked
     // check arbitrary heaps
     "continually finding and deleting the minimal element of a heap should return a sorted sequence" ->
