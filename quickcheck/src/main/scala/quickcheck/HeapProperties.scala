@@ -20,12 +20,12 @@ trait HeapProperties(val heapInterface: HeapInterface):
     }
 
   val deleteMinOfOne: (String, Prop) =
-    "delete minumum of heap of one element should return an empty heap" ->
+    "delete minimum of heap of one element should return an empty heap" ->
     forAll { (x: Int) =>
       // create a heap with exactly one element, `x`
-      val heap1: List[Node] = ???
+      val heap1: List[Node] = insert(x, empty)
       // delete the minimal element from it
-      val heap0: List[Node] = ???
+      val heap0: List[Node] = deleteMin(heap1)
       // check that heap0 is empty
       isEmpty(heap0)
     }
@@ -33,7 +33,7 @@ trait HeapProperties(val heapInterface: HeapInterface):
   val insertMinAndGetMin: (String, Prop) =
     "inserting the minimal element and then finding it should return the same minimal element" ->
     forAll(generatedHeap.suchThat(heap => !isEmpty(heap))) { (heap: List[Node]) =>
-      // find the miniminal element of the heap
+      // find the minimal element of the heap
       // (you don’t need to handle the case of empty heaps because it has been excluded from the heap generator)
       val min: Int = ???
       // insert the minimal element to the heap
