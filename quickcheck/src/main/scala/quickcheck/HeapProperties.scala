@@ -73,19 +73,23 @@ trait HeapProperties(val heapInterface: HeapInterface):
       // create two heaps:
       // - the first has two duplicate elements inserted, where both are equal to the
       //   highest value among `x` and `y`
-      // - the second also has two duplicate elements insterted, where both are equal
+      // - the second also has two duplicate elements inserted, where both are equal
       //   to the lowest value among `x` and `y`
       // finally, meld both heaps.
-      val meldedHeap: List[Node] = ???
+      val highest = if (x > y) x else y
+      val lowest = if (x < y) x else y
+      val lowHeap = insert(lowest, insert(lowest, empty))
+      val highHeap = insert(highest, insert(highest, empty))
+      val meldedHeap: List[Node] = meld(highHeap, lowHeap)
       // check that deleting the minimal element twice in a row from the melded heap,
       // and then finding the minimal element in the resulting heap returns the
       // highest value
       val deleteTwoMinAndFindMin: Boolean =
-        ???
+        highest == findMin(deleteMin(deleteMin(meldedHeap)))
       // check that inserting the lowest value to the melded heap, and then
       // finding the minimal element returns the lowest value
       val insertMinAndFindMin: Boolean =
-        ???
+        lowest == findMin(insert(lowest, meldedHeap))
       // check that both conditions are fulfilled
       deleteTwoMinAndFindMin && insertMinAndFindMin
     }
