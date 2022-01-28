@@ -6,8 +6,8 @@ package quickcheck.test
 // http://www.brics.dk/RS/96/37/BRICS-RS-96-37.pdf
 class BinomialHeap extends quickcheck.HeapInterface:
 
-  protected def root(node: Node) = node.value
-  protected def rank(node: Node) = node.rank
+  protected def root(node: Node): Int = node.value
+  protected def rank(node: Node): Int = node.rank
   protected def link(node1: Node, node2: Node): Node = // node1.rank == node2.rank
     if node1.value <= node2.value then
       Node(node1.value, node1.rank + 1, node2 :: node1.children)
@@ -54,7 +54,7 @@ class BinomialHeap extends quickcheck.HeapInterface:
 end BinomialHeap
 
 class Bogus1BinomialHeap extends BinomialHeap:
-  override def findMin(heap: List[Node]) = heap match
+  override def findMin(heap: List[Node]): Int = heap match
     case Nil => throw new NoSuchElementException("min of empty heap")
     case node :: heap => root(node)
 
@@ -73,11 +73,11 @@ class Bogus3BinomialHeap extends BinomialHeap:
       Node(node2.value, node2.rank + 1, node2 :: node2.children)
 
 class Bogus4BinomialHeap extends BinomialHeap:
-  override def deleteMin(heap: List[Node]) = heap match
+  override def deleteMin(heap: List[Node]): List[Node] = heap match
     case Nil => throw new NoSuchElementException("delete min of empty heap")
     case node :: heap => meld(node.children.reverse, heap)
 
 class Bogus5BinomialHeap extends BinomialHeap:
-  override def meld(heap1: List[Node], heap2: List[Node]) = heap1 match
+  override def meld(heap1: List[Node], heap2: List[Node]): List[Node] = heap1 match
     case Nil => heap2
     case node1 :: heap1 => List(Node(node1.value, node1.rank, heap1 ++ heap2))

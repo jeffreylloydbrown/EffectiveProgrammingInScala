@@ -2,9 +2,11 @@ package quickcheck
 
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.{const, oneOf}
-import org.scalacheck.{Arbitrary, Gen, Prop, Test}
+import org.scalacheck.{Arbitrary, Gen, Prop, Properties, Test}
 import org.scalacheck.rng.Seed
 import org.scalacheck.Prop.*
+
+import scala.concurrent.duration.Duration
 
 class QuickCheckSuite extends munit.FunSuite:
 
@@ -29,8 +31,8 @@ class QuickCheckSuite extends munit.FunSuite:
   }
 
   import scala.concurrent.duration.DurationInt
-  override val munitTimeout = 10.seconds
-  val testParameters = Test.Parameters.default
+  override val munitTimeout: Duration = 10.seconds
+  private val testParameters = Test.Parameters.default
 
   def checkBogus(heapInterface: HeapInterface)(
       shouldFail: HeapProperties => (String, Prop)*
@@ -47,7 +49,7 @@ class QuickCheckSuite extends munit.FunSuite:
 
   def checkPropertiesOnCorrectHeap(): Unit =
     // All the props should pass on the correct implementation
-    val propertiesOnCorrectHeap =
+    val propertiesOnCorrectHeap: Properties =
       val heap = new HeapProperties(quickcheck.test.BinomialHeap()) with ArbitraryHeaps
       new org.scalacheck.Properties("HeapProperties") {
         def register(labelledProp: (String, Prop)): Unit =
@@ -61,8 +63,8 @@ class QuickCheckSuite extends munit.FunSuite:
       }
 
     val (result, output) =
-      val baos = java.io.ByteArrayOutputStream()
-      val ps = java.io.PrintStream(baos)
+      val outputStream = java.io.ByteArrayOutputStream()
+      val ps = java.io.PrintStream(outputStream)
       val testResult =
         Console.withOut(ps) {
           Test.checkProperties(
@@ -74,7 +76,7 @@ class QuickCheckSuite extends munit.FunSuite:
           )
         }
       ps.flush()
-      (testResult, baos.toString)
+      (testResult, outputStream.toString)
 
     if result.exists(!_._2.passed) then throw AssertionError(
       s"The properties were not satisfied by the correct binomial heap implementation. Make sure the properties you write are true of heaps. Here is the output of scalacheck when checking your properties on the correct heap implementation.\n$output"
@@ -120,12 +122,12 @@ class QuickCheckSuite extends munit.FunSuite:
       .scanLeft(startSeed)((oldSeed, _) => oldSeed.slide)
       .zip(counts)
       .map { (seed, count) =>
-        val genPrms = Gen.Parameters.default
+        val genParameters = Gen.Parameters.default
           .withLegacyShrinking(testParameters.useLegacyShrinking)
           .withInitialSeed(Some(seed))
           .withSize((testParameters.minSize.toDouble + (sizeStep * count)).round.toInt)
         
-        p(genPrms)
+        p(genParameters)
       }
 
     // If the Prop resulted in at least one failure, report it
