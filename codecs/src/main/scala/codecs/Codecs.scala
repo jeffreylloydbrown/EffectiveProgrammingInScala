@@ -82,10 +82,11 @@ trait EncoderInstances:
 
   /** An encoder for `String` values */
   given stringEncoder: Encoder[String] =
-    Encoder.fromFunction(s => Json.Str(s))
+    Encoder.fromFunction(Json.Str.apply)
 
   /** An encoder for `Boolean` values */
-  // TODO Define a given instance of type `Encoder[Boolean]`
+  given booleanEncoded: Encoder[Boolean] =
+    Encoder.fromFunction(Json.Bool.apply)
 
   /**
     * Encodes a list of values of type `A` into a JSON array containing
