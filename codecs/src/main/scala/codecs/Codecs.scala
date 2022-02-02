@@ -64,9 +64,7 @@ object Encoder extends EncoderInstances:
   /**
    * Convenient method for creating an instance of encoder from a function `f`
    */
-  def fromFunction[A](f: A => Json) = new Encoder[A] {
-    def encode(value: A): Json = f(value)
-  }
+  def fromFunction[A](f: A => Json): Encoder[A] = (value: A) => f(value)
 
 end Encoder
 
@@ -82,10 +80,11 @@ trait EncoderInstances:
 
   /** An encoder for `String` values */
   given stringEncoder: Encoder[String] =
-    ??? // TODO Implement the `Encoder[String]` given instance
+    Encoder.fromFunction(Json.Str.apply)
 
   /** An encoder for `Boolean` values */
-  // TODO Define a given instance of type `Encoder[Boolean]`
+  given booleanEncoded: Encoder[Boolean] =
+    Encoder.fromFunction(Json.Bool.apply)
 
   /**
     * Encodes a list of values of type `A` into a JSON array containing
@@ -119,9 +118,7 @@ object ObjectEncoder:
   /**
     * Convenient method for creating an instance of object encoder from a function `f`
     */
-  def fromFunction[A](f: A => Json.Obj): ObjectEncoder[A] = new ObjectEncoder[A] {
-    def encode(value: A): Json.Obj = f(value)
-  }
+  def fromFunction[A](f: A => Json.Obj): ObjectEncoder[A] = (value: A) => f(value)
 
   /**
     * An encoder for values of type `A` that produces a JSON object with one field
@@ -169,9 +166,7 @@ object Decoder extends DecoderInstances:
   /**
     * Convenient method to build a decoder instance from a function `f`
     */
-  def fromFunction[A](f: Json => Option[A]): Decoder[A] = new Decoder[A] {
-    def decode(data: Json): Option[A] = f(data)
-  }
+  def fromFunction[A](f: Json => Option[A]): Decoder[A] = (data: Json) => f(data)
 
   /**
     * Alternative method for creating decoder instances
@@ -188,13 +183,16 @@ trait DecoderInstances:
     Decoder.fromPartialFunction { case Json.Null => () }
 
   /** A decoder for `Int` values. Hint: use the `isValidInt` method of `BigDecimal`. */
-  // TODO Define a given instance of type `Decoder[Int]`
+  given intDecoder: Decoder[Int] =
+    Decoder.fromPartialFunction { case Json.Num(number) if number.isValidInt => number.toIntExact }
 
   /** A decoder for `String` values */
-  // TODO Define a given instance of type `Decoder[String]`
+  given stringDecoder: Decoder[String] =
+    Decoder.fromPartialFunction { case Json.Str(s) => s }
 
   /** A decoder for `Boolean` values */
-  // TODO Define a given instance of type `Decoder[Boolean]`
+  given booleanDecoder: Decoder[Boolean] =
+    Decoder.fromPartialFunction { case Json.Bool(bool) => bool }
 
   /**
     * A decoder for JSON arrays. It decodes each item of the array
@@ -205,14 +203,14 @@ trait DecoderInstances:
     // Decode the provided `item` with the provided `decoder`. If this succeeds,
     // return the decoded item **prepended** to the `previouslyDecodedItems`.
     def decodeAndPrepend(item: Json, previouslyDecodedItems: List[A]): Option[List[A]] =
-      ???
+      decoder.decode(item).map(obj => obj +: previouslyDecodedItems)
     // Decode the provided `item` only if the previous items were successfully decoded.
     // In case `maybePreviouslyDecodedItems` is `None` (which means that at least
     // one of the previous items failed to be decoded), return `None`.
     // Otherwise, decode the provided `item` and prepend it to the previously
     // decoded items (use the method `decodeAndPrepend`).
     def processItem(item: Json, maybePreviouslyDecodedItems: Option[List[A]]): Option[List[A]] =
-      ???
+      maybePreviouslyDecodedItems.flatMap( items => decodeAndPrepend(item, items) )
     // Decodes all the provided JSON items. Fails if any item fails to
     // be decoded.
     // Iterates over the items, and tries to decode each item if the
@@ -224,7 +222,8 @@ trait DecoderInstances:
     //   - if it is the case, call `decodeAllItems` on the array items,
     //   - otherwise, return a failure (`None`)
     Decoder.fromFunction {
-      ???
+      case Json.Arr(items) => decodeAllItems(items)
+      case _ => None
     }
 
   /**
@@ -232,7 +231,17 @@ trait DecoderInstances:
     * the supplied `name` using the given `decoder`.
     */
   def field[A](name: String)(using decoder: Decoder[A]): Decoder[A] =
-    ???
+    Decoder.fromPartialFunction {
+      // I hate how this reads.  I need to know if the field will decode successfully as part of the guard clause,
+      // so that this case only triggers when it would actually decode.  But I've found nothing in the literature
+      // that tells me how to initialize a variable with the contents of `decoder.decode(fields(name))` so that
+      // I then don't have to recalculate it just to get it (`decoded @ decoder.decode(fields(name))` doesn't compile).
+      // I cannot do it outside of the guard clause because there is no "error" value to return for the underlying
+      // field type `A` when the decode isn't valid.  And I don't think I can use a for-comprehension because we have
+      // to return a Decoder[A] instead of an Option[Decoder[A]].
+      case Json.Obj(fields) if fields.contains(name) && decoder.decode(fields(name)).isDefined =>
+        decoder.decode(fields(name)).get
+    }
 
 end DecoderInstances
 
@@ -242,10 +251,12 @@ object Person extends PersonCodecs
 
 trait PersonCodecs:
 
+  import codecs.PersonCodecs.{NameFieldName, AgeFieldName}
+
   /** The encoder for `Person` */
   given Encoder[Person] =
-    ObjectEncoder.field[String]("name")
-      .zip(ObjectEncoder.field[Int]("age"))
+    ObjectEncoder.field[String](NameFieldName)
+      .zip(ObjectEncoder.field[Int](AgeFieldName))
       .transform[Person](user => (user.name, user.age))
 
   /** The corresponding decoder for `Person`.
@@ -255,8 +266,15 @@ trait PersonCodecs:
     *       `transform`.
     */
   given Decoder[Person] =
-    ???
+    Decoder.field[String](NameFieldName)
+      .zip(Decoder.field[Int](AgeFieldName))
+      .transform[Person]( (name, age) => Person(name, age) )
 
+end PersonCodecs
+
+object PersonCodecs:
+  private val NameFieldName = "name"
+  private val AgeFieldName = "age"
 end PersonCodecs
 
 case class Contacts(people: List[Person])
@@ -265,13 +283,22 @@ object Contacts extends ContactsCodecs
 
 trait ContactsCodecs:
 
-  // TODO Define the encoder and the decoder for `Contacts`
+  import codecs.ContactsCodecs.PeopleFieldName
+
   // The JSON representation of a value of type `Contacts` should be
   // a JSON object with a single field named “people” containing an
   // array of values of type `Person` (reuse the `Person` codecs)
-  given Encoder[Contacts] = ???
-  // ... then implement the decoder
+  given Encoder[Contacts] =
+    ObjectEncoder.field[List[Person]](PeopleFieldName).transform[Contacts](_.people)
 
+  given Decoder[Contacts] =
+    Decoder.field[List[Person]](PeopleFieldName)
+      .transform[Contacts]( people => Contacts(people) )
+
+end ContactsCodecs
+
+object ContactsCodecs:
+  private val PeopleFieldName = "people"
 end ContactsCodecs
 
 // In case you want to try your code, here is a simple `Main`
@@ -287,8 +314,9 @@ import Util.*
   val maybeJsonObj    = parseJson(""" { "name": "Alice", "age": 42 } """)
   val maybeJsonObj2   = parseJson(""" { "name": "Alice", "age": "42" } """)
   // Uncomment the following lines as you progress in the assignment
-  // println(maybeJsonString.flatMap(_.decodeAs[Int]))
-  // println(maybeJsonString.flatMap(_.decodeAs[String]))
-  // println(maybeJsonObj.flatMap(_.decodeAs[Person]))
-  // println(maybeJsonObj2.flatMap(_.decodeAs[Person]))
-  // println(renderJson(Person("Bob", 66)))
+  println(maybeJsonString.flatMap(_.decodeAs[Int]))
+  println(maybeJsonString.flatMap(_.decodeAs[String]))
+  println(maybeJsonObj.flatMap(_.decodeAs[Person]))
+  println(maybeJsonObj2.flatMap(_.decodeAs[Person]))
+  println(renderJson(Person("Bob", 66)))
+  println(renderJson(Contacts(List(Person("Alice", 42), Person("Bob", 66)))))
