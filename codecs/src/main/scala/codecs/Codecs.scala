@@ -64,9 +64,7 @@ object Encoder extends EncoderInstances:
   /**
    * Convenient method for creating an instance of encoder from a function `f`
    */
-  def fromFunction[A](f: A => Json): Encoder[A] = new Encoder[A] {
-    def encode(value: A): Json = f(value)
-  }
+  def fromFunction[A](f: A => Json): Encoder[A] = (value: A) => f(value)
 
 end Encoder
 
