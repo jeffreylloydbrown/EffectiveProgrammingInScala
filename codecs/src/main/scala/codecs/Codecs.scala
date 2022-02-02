@@ -190,7 +190,8 @@ trait DecoderInstances:
     Decoder.fromPartialFunction { case Json.Str(s) => s }
 
   /** A decoder for `Boolean` values */
-  // TODO Define a given instance of type `Decoder[Boolean]`
+  given booleanDecoder: Decoder[Boolean] =
+    Decoder.fromPartialFunction { case Json.Bool(bool) => bool }
 
   /**
     * A decoder for JSON arrays. It decodes each item of the array
