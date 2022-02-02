@@ -58,13 +58,14 @@ object Util:
       i += 1
     sb.append('"').toString
 
+  //noinspection SpellCheckingInspection
   given Facade.SimpleFacade[Json] with
-    def jnull = Json.Null
-    def jtrue = Json.Bool(true)
-    def jfalse = Json.Bool(false)
-    def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = Json.Num(BigDecimal(s.toString))
-    def jstring(s: CharSequence) = Json.Str(s.toString)
-    def jarray(vs: List[Json]) = Json.Arr(vs)
-    def jobject(vs: Map[String, Json]) = Json.Obj(vs)
+    def jnull: Json = Json.Null
+    def jtrue: Json.Bool = Json.Bool(true)
+    def jfalse: Json.Bool = Json.Bool(false)
+    def jnum(s: CharSequence, decIndex: Int, expIndex: Int): Json.Num = Json.Num(BigDecimal(s.toString))
+    def jstring(s: CharSequence): Json.Str = Json.Str(s.toString)
+    def jarray(vs: List[Json]): Json.Arr = Json.Arr(vs)
+    def jobject(vs: Map[String, Json]): Json.Obj = Json.Obj(vs)
 
 end Util
