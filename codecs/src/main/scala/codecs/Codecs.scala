@@ -64,7 +64,7 @@ object Encoder extends EncoderInstances:
   /**
    * Convenient method for creating an instance of encoder from a function `f`
    */
-  def fromFunction[A](f: A => Json) = new Encoder[A] {
+  def fromFunction[A](f: A => Json): Encoder[A] = new Encoder[A] {
     def encode(value: A): Json = f(value)
   }
 
@@ -82,7 +82,7 @@ trait EncoderInstances:
 
   /** An encoder for `String` values */
   given stringEncoder: Encoder[String] =
-    ??? // TODO Implement the `Encoder[String]` given instance
+    Encoder.fromFunction(s => Json.Str(s))
 
   /** An encoder for `Boolean` values */
   // TODO Define a given instance of type `Encoder[Boolean]`
