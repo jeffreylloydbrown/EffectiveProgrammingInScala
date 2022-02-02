@@ -251,10 +251,12 @@ object Person extends PersonCodecs
 
 trait PersonCodecs:
 
+  import codecs.PersonCodecs.{NameFieldName, AgeFieldName}
+
   /** The encoder for `Person` */
   given Encoder[Person] =
-    ObjectEncoder.field[String]("name")
-      .zip(ObjectEncoder.field[Int]("age"))
+    ObjectEncoder.field[String](NameFieldName)
+      .zip(ObjectEncoder.field[Int](AgeFieldName))
       .transform[Person](user => (user.name, user.age))
 
   /** The corresponding decoder for `Person`.
@@ -264,10 +266,15 @@ trait PersonCodecs:
     *       `transform`.
     */
   given Decoder[Person] =
-    Decoder.field[String]("name")
-      .zip(Decoder.field[Int]("age"))
+    Decoder.field[String](NameFieldName)
+      .zip(Decoder.field[Int](AgeFieldName))
       .transform[Person]( (name, age) => Person(name, age) )
 
+end PersonCodecs
+
+object PersonCodecs:
+  private val NameFieldName = "name"
+  private val AgeFieldName = "age"
 end PersonCodecs
 
 case class Contacts(people: List[Person])
@@ -276,18 +283,22 @@ object Contacts extends ContactsCodecs
 
 trait ContactsCodecs:
 
-  private val peopleFieldName = "people"
+  import codecs.ContactsCodecs.PeopleFieldName
 
   // The JSON representation of a value of type `Contacts` should be
   // a JSON object with a single field named “people” containing an
   // array of values of type `Person` (reuse the `Person` codecs)
   given Encoder[Contacts] =
-    ObjectEncoder.field[List[Person]](peopleFieldName).transform[Contacts](_.people)
+    ObjectEncoder.field[List[Person]](PeopleFieldName).transform[Contacts](_.people)
 
   given Decoder[Contacts] =
-    Decoder.field[List[Person]](peopleFieldName)
+    Decoder.field[List[Person]](PeopleFieldName)
       .transform[Contacts]( people => Contacts(people) )
 
+end ContactsCodecs
+
+object ContactsCodecs:
+  private val PeopleFieldName = "people"
 end ContactsCodecs
 
 // In case you want to try your code, here is a simple `Main`
