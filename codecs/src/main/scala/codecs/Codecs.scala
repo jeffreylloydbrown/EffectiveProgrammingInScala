@@ -203,14 +203,14 @@ trait DecoderInstances:
     // Decode the provided `item` with the provided `decoder`. If this succeeds,
     // return the decoded item **prepended** to the `previouslyDecodedItems`.
     def decodeAndPrepend(item: Json, previouslyDecodedItems: List[A]): Option[List[A]] =
-      ???
+      decoder.decode(item).map(obj => obj +: previouslyDecodedItems)
     // Decode the provided `item` only if the previous items were successfully decoded.
     // In case `maybePreviouslyDecodedItems` is `None` (which means that at least
     // one of the previous items failed to be decoded), return `None`.
     // Otherwise, decode the provided `item` and prepend it to the previously
     // decoded items (use the method `decodeAndPrepend`).
     def processItem(item: Json, maybePreviouslyDecodedItems: Option[List[A]]): Option[List[A]] =
-      ???
+      maybePreviouslyDecodedItems.flatMap( items => decodeAndPrepend(item, items) )
     // Decodes all the provided JSON items. Fails if any item fails to
     // be decoded.
     // Iterates over the items, and tries to decode each item if the
@@ -222,7 +222,8 @@ trait DecoderInstances:
     //   - if it is the case, call `decodeAllItems` on the array items,
     //   - otherwise, return a failure (`None`)
     Decoder.fromFunction {
-      ???
+      case Json.Arr(items) => decodeAllItems(items)
+      case _ => None
     }
 
   /**
@@ -230,7 +231,17 @@ trait DecoderInstances:
     * the supplied `name` using the given `decoder`.
     */
   def field[A](name: String)(using decoder: Decoder[A]): Decoder[A] =
-    ???
+    Decoder.fromPartialFunction {
+      // I hate how this reads.  I need to know if the field will decode successfully as part of the guard clause,
+      // so that this case only triggers when it would actually decode.  But I've found nothing in the literature
+      // that tells me how to initialize a variable with the contents of `decoder.decode(fields(name))` so that
+      // I then don't have to recalculate it just to get it (`decoded @ decoder.decode(fields(name))` doesn't compile).
+      // I cannot do it outside of the guard clause because there is no "error" value to return for the underlying
+      // field type `A` when the decode isn't valid.  And I don't think I can use a for-comprehension because we have
+      // to return a Decoder[A] instead of an Option[Decoder[A]].
+      case Json.Obj(fields) if fields.contains(name) && decoder.decode(fields(name)).isDefined =>
+        decoder.decode(fields(name)).get
+    }
 
 end DecoderInstances
 
@@ -253,7 +264,9 @@ trait PersonCodecs:
     *       `transform`.
     */
   given Decoder[Person] =
-    ???
+    Decoder.field[String]("name")
+      .zip(Decoder.field[Int]("age"))
+      .transform[Person]( (name, age) => Person(name, age) )
 
 end PersonCodecs
 
@@ -285,8 +298,8 @@ import Util.*
   val maybeJsonObj    = parseJson(""" { "name": "Alice", "age": 42 } """)
   val maybeJsonObj2   = parseJson(""" { "name": "Alice", "age": "42" } """)
   // Uncomment the following lines as you progress in the assignment
-  // println(maybeJsonString.flatMap(_.decodeAs[Int]))
-  // println(maybeJsonString.flatMap(_.decodeAs[String]))
-  // println(maybeJsonObj.flatMap(_.decodeAs[Person]))
-  // println(maybeJsonObj2.flatMap(_.decodeAs[Person]))
-  // println(renderJson(Person("Bob", 66)))
+  println(maybeJsonString.flatMap(_.decodeAs[Int]))
+  println(maybeJsonString.flatMap(_.decodeAs[String]))
+  println(maybeJsonObj.flatMap(_.decodeAs[Person]))
+  println(maybeJsonObj2.flatMap(_.decodeAs[Person]))
+  println(renderJson(Person("Bob", 66)))
