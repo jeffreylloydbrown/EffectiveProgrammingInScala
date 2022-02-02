@@ -276,12 +276,17 @@ object Contacts extends ContactsCodecs
 
 trait ContactsCodecs:
 
+  private val peopleFieldName = "people"
+
   // The JSON representation of a value of type `Contacts` should be
   // a JSON object with a single field named “people” containing an
   // array of values of type `Person` (reuse the `Person` codecs)
   given Encoder[Contacts] =
-    ObjectEncoder.field[List[Person]]("people").transform[Contacts](_.people)
-  // TODO ... then implement the decoder
+    ObjectEncoder.field[List[Person]](peopleFieldName).transform[Contacts](_.people)
+
+  given Decoder[Contacts] =
+    Decoder.field[List[Person]](peopleFieldName)
+      .transform[Contacts]( people => Contacts(people) )
 
 end ContactsCodecs
 
