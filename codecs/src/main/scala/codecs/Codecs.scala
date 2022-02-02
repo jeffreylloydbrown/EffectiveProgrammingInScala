@@ -118,9 +118,7 @@ object ObjectEncoder:
   /**
     * Convenient method for creating an instance of object encoder from a function `f`
     */
-  def fromFunction[A](f: A => Json.Obj): ObjectEncoder[A] = new ObjectEncoder[A] {
-    def encode(value: A): Json.Obj = f(value)
-  }
+  def fromFunction[A](f: A => Json.Obj): ObjectEncoder[A] = (value: A) => f(value)
 
   /**
     * An encoder for values of type `A` that produces a JSON object with one field
@@ -168,9 +166,7 @@ object Decoder extends DecoderInstances:
   /**
     * Convenient method to build a decoder instance from a function `f`
     */
-  def fromFunction[A](f: Json => Option[A]): Decoder[A] = new Decoder[A] {
-    def decode(data: Json): Option[A] = f(data)
-  }
+  def fromFunction[A](f: Json => Option[A]): Decoder[A] = (data: Json) => f(data)
 
   /**
     * Alternative method for creating decoder instances
@@ -190,7 +186,8 @@ trait DecoderInstances:
   // TODO Define a given instance of type `Decoder[Int]`
 
   /** A decoder for `String` values */
-  // TODO Define a given instance of type `Decoder[String]`
+  given stringDecoder: Decoder[String] =
+    Decoder.fromPartialFunction { case Json.Str(s) => s }
 
   /** A decoder for `Boolean` values */
   // TODO Define a given instance of type `Decoder[Boolean]`
