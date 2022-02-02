@@ -183,7 +183,8 @@ trait DecoderInstances:
     Decoder.fromPartialFunction { case Json.Null => () }
 
   /** A decoder for `Int` values. Hint: use the `isValidInt` method of `BigDecimal`. */
-  // TODO Define a given instance of type `Decoder[Int]`
+  given intDecoder: Decoder[Int] =
+    Decoder.fromPartialFunction { case Json.Num(number) if number.isValidInt => number.toIntExact }
 
   /** A decoder for `String` values */
   given stringDecoder: Decoder[String] =
