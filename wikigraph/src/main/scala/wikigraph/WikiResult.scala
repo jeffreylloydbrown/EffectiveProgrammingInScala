@@ -59,11 +59,11 @@ case class WikiResult[A](value: Future[Validated[A]]):
     * Hint: Both Either and Future have a similar method
     */
   def map[B](f: A => B)(using ExecutionContext): WikiResult[B] =
-    val inside: Future[Validated[B]] = value.map {
+    val futureB: Future[Validated[B]] = value.map {
       case Left(failed) => Left(failed)
       case Right(result) => Right(f(result))
     }
-    WikiResult(inside)
+    WikiResult(futureB)
 
   /**
     * Use the result of this computation as an input for another asynchronous
