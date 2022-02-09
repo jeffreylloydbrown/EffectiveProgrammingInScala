@@ -4,6 +4,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import wikigraph.errors.WikiError
 import wikigraph.errors.WikiException
 
+type Errors = Seq[WikiError]
+type Validated[A] = Either[Errors, A]
+
 /**
   * The result of an asynchronous computation which may fail.
   * This class is wrapper of `Future[Either[Seq[WikiError], A]]`.
@@ -18,7 +21,7 @@ import wikigraph.errors.WikiException
   *  - system failure: `Failure(exception)`
   *  - domain error: `Success(Left(Seq(error)))`
   */
-case class WikiResult[A](value: Future[Either[Seq[WikiError], A]]):
+case class WikiResult[A](value: Future[Validated[A]]):
 
   /**
     * Recovers from domain errors by returning the provided successful `solution` value instead.
@@ -39,7 +42,7 @@ case class WikiResult[A](value: Future[Either[Seq[WikiError], A]]):
     * are returned.
     * If this WikiResult is a system failure, that failure is not recovered.
     *
-    * @param b the computation to use in case of failure
+    * @param that the computation to use in case of failure
     */
   def fallbackTo(that: => WikiResult[A])(using ExecutionContext): WikiResult[A] =
     val f = this.value.flatMap {
@@ -56,7 +59,11 @@ case class WikiResult[A](value: Future[Either[Seq[WikiError], A]]):
     * Hint: Both Either and Future have a similar method
     */
   def map[B](f: A => B)(using ExecutionContext): WikiResult[B] =
-    ???
+    val inside: Future[Validated[B]] = value.map {
+      case Left(failed) => Left(failed)
+      case Right(result) => Right(f(result))
+    }
+    WikiResult(inside)
 
   /**
     * Use the result of this computation as an input for another asynchronous
