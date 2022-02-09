@@ -29,7 +29,7 @@ case class WikiResult[A](value: Future[Either[Seq[WikiError], A]]):
   def orElse(solution: A)(using ExecutionContext): WikiResult[A] =
     val f = value.map {
       case Left(_)           => Right(solution)
-      case nofail @ Right(_) => nofail
+      case noFail @ Right(_) => noFail
     }
     WikiResult(f)
 
@@ -83,11 +83,11 @@ case class WikiResult[A](value: Future[Either[Seq[WikiError], A]]):
     * Hint: The async part has been handled for you. You need to zip the two Either 
     */
   def zip[B](that: WikiResult[B])(using ExecutionContext): WikiResult[(A, B)] =
-    def zipEithersAcc(a: Either[Seq[WikiError], A], b: Either[Seq[WikiError], B]): Either[Seq[WikiError], (A, B)] =
+    def zipThemAcc(a: Either[Seq[WikiError], A], b: Either[Seq[WikiError], B]): Either[Seq[WikiError], (A, B)] =
       ???
     WikiResult(this.value.flatMap { thisEither =>
       that.value.map { thatEither =>
-        zipEithersAcc(thisEither, thatEither)
+        zipThemAcc(thisEither, thatEither)
       }
     })
 
@@ -95,7 +95,7 @@ object WikiResult:
   /**
     * Creates a WikiResult which succeeds with the provided value
     * 
-    * @param A the type of the result
+    * @tparam A the type of the result
     * @param a the value of the result
     */
   def successful[A](a: A): WikiResult[A] = WikiResult(Future.successful(Right[Seq[WikiError], A](a)))
@@ -122,7 +122,7 @@ object WikiResult:
   def start(block: => Unit)(using ExecutionContext): WikiResult[Unit] = WikiResult(Future(Right(block)))
 
   /**
-    * Asynchronously and non-blockingly transforms a `Seq[A]` into a WikiResult[Seq[B]]
+    * Asynchronously and non-blockingly transforms a `Seq[A]` into a `WikiResult[Seq[B]]`
     * using the provided function `A => WikiResult[B]`.
     *
     * Applies the function `f` to every element of the sequence `as`, concurrently
