@@ -96,7 +96,7 @@ case class WikiResult[A](value: Future[ValidatedResult[A]]):
     */
   def zip[B](that: WikiResult[B])(using ExecutionContext): WikiResult[(A, B)] =
     def zipThemAcc(a: ValidatedResult[A], b: ValidatedResult[B]): ValidatedResult[(A, B)] =
-      ???
+      Validated.zip(a, b)
     WikiResult(this.value.flatMap { thisEither =>
       that.value.map { thatEither =>
         zipThemAcc(thisEither, thatEither)
