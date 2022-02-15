@@ -4,12 +4,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 import wikigraph.errors.WikiError
 import wikigraph.errors.WikiException
 
-type Errors = Seq[WikiError]
-type Validated[A] = Either[Errors, A]
+type ValidatedResult[A] = Validated[WikiError, A]
 
 /**
   * The result of an asynchronous computation which may fail.
-  * This class is wrapper of `Future[Either[Seq[WikiError], A]]`.
+  * This class is wrapper of `Future[ValidatedResult[A]]`.
   *
   * @tparam A the type of the result of a successful computation
   * @param value the future to use to create this WikiResult. Checkout
@@ -21,7 +20,7 @@ type Validated[A] = Either[Errors, A]
   *  - system failure: `Failure(exception)`
   *  - domain error: `Success(Left(Seq(error)))`
   */
-case class WikiResult[A](value: Future[Validated[A]]):
+case class WikiResult[A](value: Future[ValidatedResult[A]]):
 
   /**
     * Recovers from domain errors by returning the provided successful `solution` value instead.
@@ -59,7 +58,7 @@ case class WikiResult[A](value: Future[Validated[A]]):
     * Hint: Both Either and Future have a similar method
     */
   def map[B](f: A => B)(using ExecutionContext): WikiResult[B] =
-    val futureB: Future[Validated[B]] = value.map {
+    val futureB: Future[ValidatedResult[B]] = value.map {
       case Left(failed) => Left(failed)
       case Right(result) => Right(f(result))
     }
@@ -75,7 +74,7 @@ case class WikiResult[A](value: Future[Validated[A]]):
     *       error should be propagated
     */
   def flatMap[B](f: A => WikiResult[B])(using ExecutionContext): WikiResult[B] = 
-    val futureB: Future[Either[Seq[WikiError], B]] = value.flatMap {
+    val futureB: Future[ValidatedResult[B]] = value.flatMap {
       case Left(failed) =>
         Future.successful(Left(failed))
       case Right(result) =>
@@ -96,7 +95,7 @@ case class WikiResult[A](value: Future[Validated[A]]):
     * Hint: The async part has been handled for you. You need to zip the two Either 
     */
   def zip[B](that: WikiResult[B])(using ExecutionContext): WikiResult[(A, B)] =
-    def zipThemAcc(a: Either[Seq[WikiError], A], b: Either[Seq[WikiError], B]): Either[Seq[WikiError], (A, B)] =
+    def zipThemAcc(a: ValidatedResult[A], b: ValidatedResult[B]): ValidatedResult[(A, B)] =
       ???
     WikiResult(this.value.flatMap { thisEither =>
       that.value.map { thatEither =>
