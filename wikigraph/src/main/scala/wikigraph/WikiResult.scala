@@ -155,6 +155,8 @@ object WikiResult:
     * lecture “Manipulating Validated Values”.
     */
   def traverse[A, B](as: Seq[A])(f: A => WikiResult[B])(using ExecutionContext): WikiResult[Seq[B]] =
-    ???
+    as.foldLeft[WikiResult[Seq[B]]](successful(Seq.empty)){ (wikiResults, a) =>
+      wikiResults.zip(f(a)).map( (bs, b) => bs :+ b )
+    }
 
 end WikiResult
