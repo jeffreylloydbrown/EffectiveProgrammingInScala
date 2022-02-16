@@ -17,9 +17,7 @@ object Validated:
 
   def traverse[T, A, B](as: Seq[A])(f: A => Validated[T, B]): Validated[T, Seq[B]] =
     as.foldLeft[Validated[T, Seq[B]]](Right(Seq.empty)){ (validatedBs, a) =>
-      val validatedB = f(a)
-      zip(validatedBs, validatedB)
-        .map((bs, b) => bs :+ b)
+      zip(validatedBs, f(a)).map( (bs, b) => bs :+ b )
     }
   end traverse
 
