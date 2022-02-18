@@ -21,7 +21,12 @@ final class Wikigraph(client: Wikipedia):
     * Hint: Use the methods that you implemented in WikiResult.
     */
   def namedLinks(of: ArticleId): WikiResult[Set[String]] =
-    ???
+    for
+      link <- client.linksFrom(of)
+      seqOf <- WikiResult.traverse(link.toSeq)(client.nameOfArticle)
+    yield
+      seqOf.toSet
+  end namedLinks
 
   /**
     * Computes the distance between two articles using breadth first search.
