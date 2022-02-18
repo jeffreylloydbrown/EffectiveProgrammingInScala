@@ -1,9 +1,10 @@
 package wikigraph
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import wikigraph.Articles.ArticleId
+import wikigraph.errors.WikiError.ArticleNotFound
 
-import Articles.ArticleId
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 /**
@@ -22,8 +23,8 @@ final class Wikigraph(client: Wikipedia):
     */
   def namedLinks(of: ArticleId): WikiResult[Set[String]] =
     for
-      link <- client.linksFrom(of)
-      seqOf <- WikiResult.traverse(link.toSeq)(client.nameOfArticle)
+      links <- client.linksFrom(of)
+      seqOf <- WikiResult.traverse(links.toSeq)(client.nameOfArticle)
     yield
       seqOf.toSet
   end namedLinks
@@ -71,36 +72,31 @@ final class Wikigraph(client: Wikipedia):
       *       to fallback by continuing iteration without modifying visited or q.
       *       Refer to the documentation of[[wikigraph.WikiResult#fallbackTo]].
       */
+    // THE SECOND HINT IS WRONG!  You need to modify q or you get into an infinite recursion.
     def iter(visited: Set[ArticleId], q: Queue[(Int, ArticleId)]): WikiResult[Option[Int]] =
-    /*
- 1  procedure BFS(G, root) is
-2      let Q be a queue
-3      label root as explored
-4      Q.enqueue(root)
-5      while Q is not empty do
-6          v := Q.dequeue()
-        if v.depth > maxDepth then
-            return None
-7          if v is the goal then
-8              return v
-9          for all edges from v to w in G.adjacentEdges(v) do
-10              if w is not labeled as explored then
-11                  label w as explored
-12                  Q.enqueue(w)
-    return None
-*/
-      while q.nonEmpty do
-        val ((distance, articleId), qWithoutThisOne) = q.dequeue
-        (distance, articleId) match
-          case any if distance > maxDepth =>
-            return WikiResult.successful(None)
-          case any if articleId == target =>
-            return WikiResult.successful(Some(articleId.raw))
-          case any =>
-            ???
-        end match
-
-      WikiResult.successful(None)
+      q.dequeueOption match
+        case None =>
+          WikiResult.successful(None)
+        case Some(((distance, _), _)) if distance > maxDepth =>
+          WikiResult.successful(None)
+        case Some(((distance, articleId), _)) if articleId == target =>
+          WikiResult.successful(Some(distance))
+        case Some(((distance, articleId), qWithoutThisPair)) =>
+          client.linksFrom(articleId)
+            .flatMap { articleIds =>
+              if articleIds.contains(target) then
+                WikiResult.successful(Some(distance))
+              else
+                val newVisited = visited ++ articleIds
+                val newQ = qWithoutThisPair.enqueueAll(articleIds.map(id => (distance+1) -> id))
+                iter(newVisited, newQ)
+              end if
+            }
+            .fallbackTo {
+              // THE SECOND HINT IS WRONG!  You need to modify q or you get into an infinite recursion.
+              iter(visited, qWithoutThisPair)
+            }
+      end match
     end iter
     if start == target then WikiResult.successful(Some(0))
     else iter(Set(start), Queue(1->start))
