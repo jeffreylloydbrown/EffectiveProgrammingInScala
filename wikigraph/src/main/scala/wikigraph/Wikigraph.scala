@@ -72,7 +72,36 @@ final class Wikigraph(client: Wikipedia):
       *       Refer to the documentation of[[wikigraph.WikiResult#fallbackTo]].
       */
     def iter(visited: Set[ArticleId], q: Queue[(Int, ArticleId)]): WikiResult[Option[Int]] =
-      ???
+    /*
+ 1  procedure BFS(G, root) is
+2      let Q be a queue
+3      label root as explored
+4      Q.enqueue(root)
+5      while Q is not empty do
+6          v := Q.dequeue()
+        if v.depth > maxDepth then
+            return None
+7          if v is the goal then
+8              return v
+9          for all edges from v to w in G.adjacentEdges(v) do
+10              if w is not labeled as explored then
+11                  label w as explored
+12                  Q.enqueue(w)
+    return None
+*/
+      while q.nonEmpty do
+        val ((distance, articleId), qWithoutThisOne) = q.dequeue
+        (distance, articleId) match
+          case any if distance > maxDepth =>
+            return WikiResult.successful(None)
+          case any if articleId == target =>
+            return WikiResult.successful(Some(articleId.raw))
+          case any =>
+            ???
+        end match
+
+      WikiResult.successful(None)
+    end iter
     if start == target then WikiResult.successful(Some(0))
     else iter(Set(start), Queue(1->start))
 
