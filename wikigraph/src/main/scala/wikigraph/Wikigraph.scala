@@ -66,14 +66,14 @@ final class Wikigraph(client: Wikipedia):
       * 
       * HINT: Have a look at the implementation of [[wikigraph.WikiResult#zip]] to see how to use
               [[wikigraph.WikiResult#flatMap]] to work with the content of [[wikigraph.WikiResult]].
-              This is useful to chain successive calls to iter.
+              This is useful to chain successive calls to `iterate`.
       * 
       * HINT: Do not forget, if a domain error occurs during exploration of the graph,
       *       to fallback by continuing iteration without modifying visited or q.
       *       Refer to the documentation of[[wikigraph.WikiResult#fallbackTo]].
       */
     // THE SECOND HINT IS WRONG!  You need to modify q or you get into an infinite recursion.
-    def iter(visited: Set[ArticleId], q: Queue[(Int, ArticleId)]): WikiResult[Option[Int]] =
+    def iterate(visited: Set[ArticleId], q: Queue[(Int, ArticleId)]): WikiResult[Option[Int]] =
       q.dequeueOption match
         case None =>
           WikiResult.successful(None)
@@ -89,17 +89,17 @@ final class Wikigraph(client: Wikipedia):
               else
                 val newVisited = visited ++ articleIds
                 val newQ = qWithoutThisPair.enqueueAll(articleIds.map(id => (distance+1) -> id))
-                iter(newVisited, newQ)
+                iterate(newVisited, newQ)
               end if
             }
             .fallbackTo {
               // THE SECOND HINT IS WRONG!  You need to modify q or you get into an infinite recursion.
-              iter(visited, qWithoutThisPair)
+              iterate(visited, qWithoutThisPair)
             }
       end match
-    end iter
+    end iterate
     if start == target then WikiResult.successful(Some(0))
-    else iter(Set(start), Queue(1->start))
+    else iterate(Set(start), Queue(1->start))
 
   /**
     * Computes the distances between some pages provided the list of their titles.
