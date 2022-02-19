@@ -21,7 +21,7 @@ class Edges(tag: Tag) extends Table[Edge](tag, "edges"):
   val * = (to_node, from_node) <> ((to, from) => Edge(to, from), edge => Some((edge.fromNode, edge.toNode)))
 
 class Titles(tag: Tag) extends Table[Title](tag, "titles"):
-  val articleId = column[Int]("articleid")
+  val articleId = column[Int]("articleId")
   val title = column[String]("title")
   val * = (articleId, title) <> ((id, title) => Title(id, title), title => Some((title.articleId, title.title)))
 

@@ -21,7 +21,7 @@ extension [A] (el: WikiResult[A])(using ExecutionContext)
     Try(Await.result(el.value, timeout)) match 
       case Success(Right(a)) => a
       case Success(Left(errors)) => throw Exception(s"Expecting a successful WikiResult but obtained some business error(s): ${errors.mkString("\n")}")
-      case Failure(exception) => throw Exception(s"Expecting a successful WikiResult but obtained a system failure: ${exception}")
+      case Failure(exception) => throw Exception(s"Expecting a successful WikiResult but obtained a system failure: $exception")
 
 def blockAndCompare[A](expected: WikiResult[A], obtained: WikiResult[A], msg: String = ""): Prop =
   val expectedTry = Try(Await.result(expected.value, timeout)) 
@@ -30,7 +30,7 @@ def blockAndCompare[A](expected: WikiResult[A], obtained: WikiResult[A], msg: St
   (expectedTry, obtainedTry) match
     case (Success(expectedRes), Success(obtainedRes)) if expectedRes != obtainedRes =>
       false :| s"$msg\n - Expected value: $expectedRes\n - Obtained value: $obtainedRes"
-    case (Failure(expectedFail), Failure(obtainedFail)) if expectedFail != obtainedFail => ???
+    case (Failure(expectedFail), Failure(obtainedFail)) if expectedFail != obtainedFail => 
       false :| s"$msg\n - Expected failure: $expectedFail\n - Obtained value: $obtainedFail"
     case (Success(expectedRes), Failure(obtainedFail)) =>
       false :| s"$msg\nThe value $expectedRes was expected but I obtained the exception $obtainedFail"
