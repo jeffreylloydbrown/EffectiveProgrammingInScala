@@ -17,7 +17,7 @@ trait Wikipedia:
     * If the provided id does not identify an article in the data,
     * the computation fails with a [[wikigraph.errors.WikiError.ArticleNotFound]]
     * 
-    * @param the id of the page from which we want to retrieve the links
+    * @param art the id of the page from which we want to retrieve the links
     */
   def linksFrom(art: ArticleId)(using ExecutionContext): WikiResult[Set[ArticleId]]
 
@@ -28,7 +28,7 @@ trait Wikipedia:
     * page does not have a title, the computation fails with a 
     * [[wikigraph.errors.WikiError.TitleNotFound]]
     * 
-    * @param the id of the page from which we want to retrieve the links
+    * @param art the id of the page from which we want to retrieve the links
     */
   def nameOfArticle(art: ArticleId)(using ExecutionContext): WikiResult[String]
 

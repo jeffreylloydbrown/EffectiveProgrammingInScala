@@ -1,3 +1,5 @@
+package wikigraph
+
 import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.DurationInt
 import wikigraph.implementations.Sqlite
@@ -11,7 +13,7 @@ import ExecutionContext.Implicits.global
   * 
   * Run with `sbt run`
   */
-@main def run() =
+@main def run(): Unit =
   val wiki = Sqlite()
   val scala = ArticleId(3254510)
   val python = ArticleId(23862)
