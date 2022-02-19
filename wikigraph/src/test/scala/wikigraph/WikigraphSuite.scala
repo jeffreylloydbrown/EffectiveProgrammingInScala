@@ -269,13 +269,13 @@ class WikigraphSuite extends munit.FunSuite:
     val graph: Map[ArticleId, Set[ArticleId]] = 
       Map(ArticleId(1) -> links)
 
-    import scala.collection.convert.ImplicitConversionsToScala._
+    import scala.jdk.CollectionConverters._
 
     def setUp(withErrors: Boolean, withFailure: Boolean): Prop = {
       // inject failures into the linksFrom result
       val failableLinks: Gen[WikiResult[Set[ArticleId]]] = 
         val setOfGen = links.map(Gen.const).map(g => wikiResultGen(withErrors, withFailure)(using summon[Gen[WikiError]], g))
-        Gen.sequence(setOfGen).map(set => WikiResult.traverse(set.toSeq)(identity).map(_.toSet))
+        Gen.sequence(setOfGen).map(set  => WikiResult.traverse(set.asScala.toSeq)(identity).map(_.toSet))
   
       // inject failures into the nameOfArticle function
       val nameSearcher: Gen[ArticleId => WikiResult[String]] =
@@ -285,7 +285,7 @@ class WikigraphSuite extends munit.FunSuite:
         }
         Gen.sequence(gens).map { listOfTuples =>
           (art: ArticleId) => 
-            List.from(listOfTuples).find(_._1 == art) match
+            List.from(listOfTuples.asScala).find(_._1 == art) match
               case None => WikiResult.domainError(TitleNotFound(art))
               case Some((_, res)) => res
         }
