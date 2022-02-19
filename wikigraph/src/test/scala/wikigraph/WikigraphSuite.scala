@@ -57,7 +57,7 @@ class WikigraphSuite extends munit.FunSuite:
       val obtained = a.zip(b)
       val expected = WikiResult(a.value.flatMap(eiL => b.value.map(eiR => eiL.flatMap(l => eiR.map(r => l -> r)))))
 
-      blockAndCompare(obtained, expected)
+      blockAndCompare(expected, obtained)
     }
   }
 
@@ -242,13 +242,13 @@ class WikigraphSuite extends munit.FunSuite:
     )
     val res = Wikigraph(InMemory(g)).breadthFirstSearch(ArticleId(1), ArticleId(5), 2)
 
-    blockAndCompare(res, WikiResult.successful[Option[Int]](None))
+    blockAndCompare(WikiResult.successful[Option[Int]](None), res)
   }
 
   property("breadthFirstSearch does not fail on errors") {
     val g = Map(ArticleId(0) -> Set.empty[ArticleId])
     val res = Wikigraph(InMemory(g)).breadthFirstSearch(ArticleId(1), ArticleId(1000), 4)
-    blockAndCompare(res, WikiResult.successful[Option[Int]](None))
+    blockAndCompare(WikiResult.successful[Option[Int]](None), res)
   }
 
   property("distanceMatrix") {
@@ -261,7 +261,7 @@ class WikigraphSuite extends munit.FunSuite:
     val res = Wikigraph(InMemory(g)).distanceMatrix(List("TestArticle-1", "TestArticle-3")) 
     val exp = WikiResult.successful[Seq[(String, String, Option[Int])]](Seq(("TestArticle-1", "TestArticle-3", Option(2)), ("TestArticle-3", "TestArticle-1", Option(1))))
 
-    blockAndCompare(res, exp)
+    blockAndCompare(exp, res)
   }
 
   property("namedLinks") {
