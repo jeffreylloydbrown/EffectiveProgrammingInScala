@@ -23,7 +23,7 @@ class WikigraphSuite extends munit.FunSuite:
   given idGen: Gen[ArticleId] =
     Gen.posNum[Int].map(ArticleId(_))
   given artNotFoundGen: Gen[ArticleNotFound] =
-    idGen.map(ArticleNotFound(_))
+    idGen.map(ArticleNotFound.apply)
   given wikiErrorGen: Gen[WikiError] =
     for
       id <- idGen
@@ -302,7 +302,7 @@ class WikigraphSuite extends munit.FunSuite:
         val client: Wikipedia = new Wikipedia:
           override def linksFrom(art: ArticleId)(using ExecutionContext): WikiResult[Set[ArticleId]] = links
           override def nameOfArticle(art: ArticleId)(using ExecutionContext): WikiResult[String] = f(art)
-          override def searchId(title: String)(using ExecutionContext): WikiResult[ArticleId] = ???
+          override def searchId(title: String)(using ExecutionContext): WikiResult[ArticleId] = WikiResult.domainError(NoResult(title))
   
         val wg = Wikigraph(client)
 
